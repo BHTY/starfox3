@@ -78,6 +78,9 @@ def convertFile(fileName):
 	for i in x:
 		if i == "": outstring += "\n"
 		i = i.split(" ")
+		try: 
+			if len(i) > 1: i.remove("")
+		except: pass
 		if i[0] == "mtllib":
 			library = i[1]
 		if i[0] == "usemtl": 
