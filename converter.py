@@ -12,7 +12,7 @@ def getAverage(lst):
 	return current/count
 
 def getAverageColor(fileName):
-	os.system("c:\\users\\will\\videos\\ffmpeg -y -i {} temp.bmp".format(fileName))
+	os.system("c:\\users\\will\\videos\\ffmpeg -loglevel panic -nostats -hide_banner -y -i {} temp.bmp".format(fileName))
 	file = open("temp.bmp", "rb")
 	contents = file.read()[54:]
 	file.close()
@@ -39,6 +39,35 @@ def getAverageColor(fileName):
 		
 
 
+def getTexture(mtlName, mtlLib):
+	outstring = ""
+	file = open(mtlLib, "r+")
+	text = file.read()
+	file.close()
+	lines = text.split("\n")
+	correct = 0
+
+	for i in range(len(lines)):
+		if "newmtl {}abc".format(mtlName) in (lines[i]+"abc"): correct = i + 1
+
+	i = correct
+	
+	while True: 
+		if "Kd" in lines[i] and "map_Kd" not in lines[i]:
+			#print("\n"*100)
+			thing = lines[i].split(" ")
+			outstring = "{} {} {}".format(thing[1], thing[2], thing[3])
+		if "map_Kd" in lines[i]:
+			thing = lines[i].split(" ")[1].replace("/","\\")
+			outstring = getAverageColor(thing)
+			break
+		if "newmtl" in lines[i]: break
+		i += 1
+		if i >= len(lines): break
+
+	return outstring
+
+
 def convertFile(fileName):
 	file = open(fileName, "r+")
 	text = file.read()
@@ -49,9 +78,12 @@ def convertFile(fileName):
 	for i in x:
 		if i == "": outstring += "\n"
 		i = i.split(" ")
+		if i[0] == "mtllib":
+			library = i[1]
 		if i[0] == "usemtl": 
 			materialName = i[1]
-			outstring += "usemtl " + getAverageColor(sys.argv[1][0:-4] + "\\" + materialName + ".png") + "\n"
+			#outstring += "usemtl " + getAverageColor(sys.argv[1][0:-4] + "\\" + materialName + ".png") + "\n"
+			outstring += "usemtl " + getTexture(materialName, library) + "\n"
 		if i[0] == "vt" or i[0] == "vn": pass
 		if i[0] == "v": outstring += i[0] + " " + i[1] + " " + i[2] + " " + i[3] + "\n"
 		
