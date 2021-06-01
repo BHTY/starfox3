@@ -12,7 +12,7 @@ def getAverage(lst):
 	return current/count
 
 def getAverageColor(fileName):
-	os.system("c:\\users\\will\\videos\\ffmpeg -loglevel panic -nostats -hide_banner -y -i {} temp.bmp".format(fileName))
+	os.system("c:\\users\\will\\videos\\ffmpeg -loglevel panic -nostats -hide_banner -y -i {} -pix_fmt bgr24 temp.bmp".format(fileName))
 	file = open("temp.bmp", "rb")
 	contents = file.read()[54:]
 	file.close()
@@ -60,6 +60,7 @@ def getTexture(mtlName, mtlLib):
 		if "map_Kd" in lines[i]:
 			thing = lines[i].split(" ")[1].replace("/","\\")
 			outstring = getAverageColor(thing)
+			#print("loading {} (avg color: {})".format(thing, outstring[:-1]))
 			break
 		if "newmtl" in lines[i]: break
 		i += 1
