@@ -4,7 +4,7 @@ Levels are defined in .lvl files that include the following
 - The level's music (an MP3 file)
 - Any script trigger points (including one-dimensional triggers) and scripts
 
-The scripts use a simple, custom language, defined with the following commands.
+The scripts use a simple, custom language, interpreted and executed in a minimal virtual machine at runtime, defined with the following commands.
 
 **CAMROTATE**: Takes pitch/yaw rotation as arguments (example: _CAMROTATE 90 15_ would rotate 90 degrees horizontally and ten degrees vertically)
 
