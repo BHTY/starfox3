@@ -4,26 +4,29 @@ Levels are defined in .lvl files that include the following
 - The level's music (an MP3 file) - specified in script
 - Any script trigger points (including one-dimensional triggers) and scripts -> specified in script loop
 
-The scripts use a simple, custom language, interpreted and executed in a minimal virtual machine at runtime, defined with the following commands.
+The scripts use a C-style scripting language, interpreted and executed in a stack-based virtual machine at runtime. All entities have scripts associated with them, including the map/camera (entity -1)
 
-**CAMROTATE**: Takes pitch/yaw rotation as arguments (example: _CAMROTATE 90 15_ would rotate 90 degrees horizontally and ten degrees vertically)
+All scripts will have an init() function, a loop() function, and event handlers
+For example, the map/camera's init() func will spawn the Arwing
+The Arwing's init func will set its HP, etc.
 
-**CAMMOVE**: 
+Exported Functions
+------------------
+log(string message) -> Prints string to the console
+objThisID() -> Returns entity ID of current object (returns -1 if camera)
+objColliding() -> Returns entity ID of colliding object (returns -1 if no object)
+objDestroy(float entityID) -> Destroys object of given ID
+objRotate(float entityID, float xRot, float yRot, float zRot) -> Rotates object on given axes 
+objRotRelative(float entityID, float xRot, float yRot, float zRot) -> Rotates object on given axes
+objMove( ) -> 
+tick() -> Does nothing
+sayMsg(float speaker, float messageID) -> Using the image from the given speaker, display the text and play the sound associated with the given ID
+spawnObj(string model, float scaleX, float scaleY, float scaleZ, float xPos, float yPos, float zPos, string script) -> 
+sendMessage(float entityID, float messageType) -> Sends a message to another entity
+setVar(float entityID, float varIndex, floatValue) -> Alters value of local entity state variable
+getVar(float entityID, float varIndex) -> Fetches value of local entity state variable
 
-**SPAWNOBJ**: Spawns enemy ships
-
-**SAYMSG**: Takes two arguements - the speaker ID (used for the image) and message ID (used for the message text and sound clip if appicable) (example: _SAYMSG 001 365_ would have speaker 1 say message 365)
-
-Additionally, each entity can have its own script, which is "ticked" each frame, with the following commands.
-
-**TICK**: Does nothing. Used for empty scripts.
-
-**OBJROTATE**
-
-**OBJMOVE**
-
-**OBJCOLLIDE**: Returns the ID of any object the current object is colliding with. Returns -1 if no object.
-
-**OBJDESTROY**: Takes one arguement - the object ID to destroy. -1 is no object, -2 is "this" object.
-
-Objects can also check for collision with other objects 
+Event Handlers
+--------------
+onCollide(float entityID)
+onMessage(float message, float sender)
