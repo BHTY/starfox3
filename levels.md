@@ -1,8 +1,8 @@
 Levels are defined in .lvl files that include the following
 - The level's 3D model (an OBJ file in the special SF3 format)
 - The level's 2D background (a PNG file)
-- The level's music (an MP3 file)
-- Any script trigger points (including one-dimensional triggers) and scripts
+- The level's music (an MP3 file) - specified in script
+- Any script trigger points (including one-dimensional triggers) and scripts -> specified in script loop
 
 The scripts use a simple, custom language, interpreted and executed in a minimal virtual machine at runtime, defined with the following commands.
 
