@@ -1,7 +1,7 @@
 Levels are defined in .lvl files that include the following
 - The level's 3D model (an OBJ file in the special SF3 format)
 - The level's 2D background (a PNG file)
-- The map's script (in compiled form), along with any other scripts it references - the maps script will define both the MP3 file for the level's music, and any script trigger points (if player.Z == 100 then do event) in the main loop
+- The map's script (in compiled bytecode form), along with any other scripts it references - the maps script will define both the MP3 file for the level's music, and any script trigger points (if player.Z == 100 then do event) in the main loop
 
 The scripts use a C-style scripting language, interpreted and executed in a stack-based virtual machine at runtime. All entities have scripts associated with them, including the map/camera (entity -1)
 
