@@ -9,6 +9,8 @@ All scripts will have an init() function, a loop() function, and event handlers.
 
 Alternatively, the map may recieve a message from the game engine informing it of a keypress. The map will then pass this along to the Arwing if it falls within the controls for that starfighter, which will then spawn a laser right in front of the ship (potentially two if its state variable for twin lasers are set) and play a sound effect. The laser will keep moving forward until it hits something, when it will destroy itself, and send the laser impact message to whatever it hits. That object will then respond to the message by decrementing the appropriate HP, and playing the appropriate animation and destroying itself if necessary. 
 
+You can also of course create your own functions, and I am considering adding OO to replace the getters/setters format.
+
 Exported Functions
 ------------------
 log(string message) -> Prints string to the console
