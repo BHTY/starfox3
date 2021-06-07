@@ -21,11 +21,11 @@ objDestroy(float entityID) -> Destroys object of given ID
 
 objRotate(float entityID, float xRot, float yRot, float zRot) -> Rotates object on given axes 
 
-objCurrentX(float entityID) -> Returns current X coordinate of object
+objCurrentX(float entityID) -> Returns current pitch of object
 
-objCurrentY(float entityID) -> Returns current Y coordinate of object
+objCurrentY(float entityID) -> Returns current yaw of object
 
-objCurrentZ(float entityID) -> Returns current Z coordinate of object
+objCurrentZ(float entityID) -> Returns current roll of object
 
 objMove( ) -> 
 
