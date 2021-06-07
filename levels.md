@@ -29,7 +29,7 @@ objCurrentZ(float entityID) -> Returns current roll of object
 
 objMove( ) -> 
 
-tick() -> Does nothing
+tick() -> Returns
 
 sayMsg(float speaker, float messageID) -> Using the image from the given speaker, display the text and play the sound associated with the given ID
 
