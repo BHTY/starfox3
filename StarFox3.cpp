@@ -19,6 +19,11 @@ int cameraRotY = 0;
 char keys[256];
 float xRot = 0;
 
+struct Message {
+    float sender;
+    float messageType;
+};
+
 struct Vector {
     float rotX;
     float rotY;
@@ -42,20 +47,95 @@ struct Triangle {
 
 struct Entity {
     Vertex coords;
-    //Triangle* tris;
     Triangle tris[polyLimit];
+    //Triangle* tris;
     int numTris;
-    Vector rotation;
     int visible;
+    Vector rotation;
+    char* scriptPtr;
+    int scriptSize;
+    float state[8];
+    Message messages[128];
+    char messagePointer;
 };
 
 //size_t* objects;
 int numObjects = 0;
 Entity luigi;
-Entity objects[50];
+Entity objects[100];
 
-double r2() {
-    return (double)rand() / (double)RAND_MAX;
+float* matmul(float matrix[3][3], float* vector) {
+    float* newFloats = (float*)malloc(3 * sizeof(float));
+    int i, o;
+
+    for (i = 0; i < 3; i++) {
+        float temp = 0.0;
+        for (o = 0; o < 3; o++) {
+            temp += (matrix[i][o] * vector[o]);
+        }
+        newFloats[i] = temp;
+    }
+
+    return newFloats;
+
+}
+
+Triangle formTri(Vertex vert1, Vertex vert2, Vertex vert3, unsigned short shade) {
+    Triangle temp;
+    temp.vert1 = vert1;
+    temp.vert2 = vert2;
+    temp.vert3 = vert3;
+    temp.shadeR = 0.0;
+    temp.shadeG = 0.0;
+    temp.shadeB = 1.0;
+    return temp;
+}
+
+Entity formCube(unsigned short shade) {
+    Entity temporary;
+    Vertex verts[8];
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        if (((i % 4) == 0) || (i % 4) == 1) {
+            verts[i].x = 5.0;
+        }
+        else {
+            verts[i].x = -5.0;
+        }
+        if (i < 4) {
+            verts[i].y = -5.0;
+        }
+        else {
+            verts[i].y = 5.0;
+        }
+        if ((i == 7) || (i == 4) || (i == 3) || (i == 0)) {
+            verts[i].z = -5.0;
+        }
+        else {
+            verts[i].z = 5.0;
+        }
+    }
+
+    temporary.tris[0] = formTri(verts[1], verts[2], verts[3], shade);
+    temporary.tris[1] = formTri(verts[7], verts[6], verts[5], shade);
+    temporary.tris[2] = formTri(verts[4], verts[5], verts[1], shade);
+    temporary.tris[3] = formTri(verts[5], verts[6], verts[2], shade);
+    temporary.tris[4] = formTri(verts[2], verts[6], verts[7], shade);
+    temporary.tris[5] = formTri(verts[0], verts[3], verts[7], shade);
+    temporary.tris[6] = formTri(verts[0], verts[1], verts[3], shade);
+    temporary.tris[7] = formTri(verts[4], verts[7], verts[5], shade);
+    temporary.tris[8] = formTri(verts[0], verts[4], verts[1], shade);
+    temporary.tris[9] = formTri(verts[1], verts[5], verts[2], shade);
+    temporary.tris[10] = formTri(verts[3], verts[2], verts[7], shade);
+    temporary.tris[11] = formTri(verts[4], verts[0], verts[7], shade);
+    temporary.numTris = 12;
+    temporary.coords.x = 0;
+    temporary.coords.y = 0;
+    temporary.coords.z = 0;
+
+
+    return temporary;
 }
 
 Entity loadOBJ(char* fileName, float scaleFactorX, float scaleFactorY, float scaleFactorZ) {
@@ -63,6 +143,7 @@ Entity loadOBJ(char* fileName, float scaleFactorX, float scaleFactorY, float sca
     FILE* fp = fopen(fileName, "r");
     int eof = 0;
     Vertex verts[polyLimit*3];
+    Triangle tris[polyLimit];
     int currentVert = 0;
     int currentFace = 0;
     float currentR = 0.0;
@@ -117,6 +198,8 @@ Entity loadOBJ(char* fileName, float scaleFactorX, float scaleFactorY, float sca
 
     }
 
+    //object.tris = (Triangle*)malloc(object.numTris * sizeof(Triangle));
+    //memcpy(object.tris, tris, object.numTris * sizeof(Triangle));
     fclose(fp);
     object.visible = 1;
     return object;
@@ -133,76 +216,82 @@ void initGL() {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
 }
 
+void runEventScript();
+
+void runEntityScript(Entity* entity) {
+    //(*entity).rotation.rotY+=0.1;
+
+    int currentIndex = 0;
+
+    while ((*entity).scriptSize > currentIndex) {
+        //fetch command
+    }
+}
+
 void display() {
     //Entity obj = loadOBJ((char*)"C:\\Users\\Will\\Documents\\Custom Edited - Star Fox Customs - Arwing SNES\\arwing\\arwing SNES.obj");
-
+    
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(cameraX, cameraY, cameraZ);
     glRotatef(cameraRotY, 1.0f, 0.0f, 0.0f);
     glRotatef(cameraRotX, 0.0f, 1.0f, 0.0f);
+    //printf("hello");
 
     glBegin(GL_TRIANGLES);
-
+    
     for (int current = 0; current < numObjects; current++) {
-        /**(*(Entity*)objects[0]).coords.z += 0.1;
-        Entity obj = *(Entity*)objects[current];**/
+        runEntityScript(&(objects[current]));
         Entity obj = objects[current];
 
         if (obj.visible == 1) {
             for (int i = 0; i < obj.numTris; i++) {
                 glColor3f(obj.tris[i].shadeR, obj.tris[i].shadeG, obj.tris[i].shadeB);
-                glVertex3f(obj.tris[i].vert1.x + obj.coords.x, obj.tris[i].vert1.y + obj.coords.y, obj.tris[i].vert1.z + obj.coords.z);
+                /*glVertex3f(obj.tris[i].vert1.x + obj.coords.x, obj.tris[i].vert1.y + obj.coords.y, obj.tris[i].vert1.z + obj.coords.z);
                 glVertex3f(obj.tris[i].vert2.x + obj.coords.x, obj.tris[i].vert2.y + obj.coords.y, obj.tris[i].vert2.z + obj.coords.z);
-                glVertex3f(obj.tris[i].vert3.x + obj.coords.x, obj.tris[i].vert3.y + obj.coords.y, obj.tris[i].vert3.z + obj.coords.z);
+                glVertex3f(obj.tris[i].vert3.x + obj.coords.x, obj.tris[i].vert3.y + obj.coords.y, obj.tris[i].vert3.z + obj.coords.z);*/
 
-                /**rotate around X axis
-                float x = (obj.tris[i].vert1.x + obj.coords.x);
-                float y = cos(obj.rotation.rotX) * (obj.tris[i].vert1.y + obj.coords.y) - sin(obj.rotation.rotX) * (obj.tris[i].vert1.z + obj.coords.z);
-                float z = sin(obj.rotation.rotX) * (obj.tris[i].vert1.y + obj.coords.y) + cos(obj.rotation.rotX) * (obj.tris[i].vert1.z + obj.coords.z);
+                float rotationX[3][3] = {
+                    {1, 0, 0}, 
+                    {0, cos(obj.rotation.rotX), -sin(obj.rotation.rotX)},
+                    {0, sin(obj.rotation.rotX), cos(obj.rotation.rotX)}
+                };
 
-                //rotate around Y axis
-                x = cos(obj.rotation.rotY) * x + sin(obj.rotation.rotY) * z;
-                z = -sin(obj.rotation.rotY) * x + cos(obj.rotation.rotY) * z;
+                float rotationY[3][3] = {
+                    {cos(obj.rotation.rotY), 0, -sin(obj.rotation.rotY)},
+                    {0, 1, 0}, 
+                    {sin(obj.rotation.rotY), 0, cos(obj.rotation.rotY)}
+                };
 
-                //rotate around Z axis
-                x = cos(obj.rotation.rotZ) * x - sin(obj.rotation.rotZ) * y;
-                y = sin(obj.rotation.rotZ) * x + cos(obj.rotation.rotZ) * y;
+                float rotationZ[3][3] = {
+                    {cos(obj.rotation.rotZ), -sin(obj.rotation.rotZ), 0},
+                    {sin(obj.rotation.rotZ), cos(obj.rotation.rotZ), 0},
+                    {0, 0, 1} 
+                };
 
-                glVertex3f(x, y, z);
+                //add matrix multiplication functions
 
+                //float vert1[3] = {obj.tris[i].vert1.x + obj.coords.x, obj.tris[i].vert1.y + obj.coords.y, obj.tris[i].vert1.z + obj.coords.z};
+                float vert1[3] = { obj.tris[i].vert1.x, obj.tris[i].vert1.y, obj.tris[i].vert1.z};
+                float* vert = matmul(rotationX, vert1);
+                vert = matmul(rotationY, vert);
+                vert = matmul(rotationZ, vert);
+                glVertex3f(vert[0] + obj.coords.x, vert[1] + obj.coords.y, vert[2] + obj.coords.z);
 
-                //rotate around X axis
-                x = (obj.tris[i].vert2.x + obj.coords.x);
-                y = cos(obj.rotation.rotX) * (obj.tris[i].vert2.y + obj.coords.y) - sin(obj.rotation.rotX) * (obj.tris[i].vert2.z + obj.coords.z);
-                z = sin(obj.rotation.rotX) * (obj.tris[i].vert2.y + obj.coords.y) + cos(obj.rotation.rotX) * (obj.tris[i].vert2.z + obj.coords.z);
+                //float vert2[3] = { obj.tris[i].vert2.x + obj.coords.x, obj.tris[i].vert2.y + obj.coords.y, obj.tris[i].vert2.z + obj.coords.z };
+                float vert2[3] = { obj.tris[i].vert2.x, obj.tris[i].vert2.y, obj.tris[i].vert2.z };
+                vert = matmul(rotationX, vert2);
+                vert = matmul(rotationY, vert);
+                vert = matmul(rotationZ, vert);
+                glVertex3f(vert[0] + obj.coords.x, vert[1] + obj.coords.y, vert[2] + obj.coords.z);
 
-                //rotate around Y axis
-                x = cos(obj.rotation.rotY) * x + sin(obj.rotation.rotY) * z;
-                z = -sin(obj.rotation.rotY) * x + cos(obj.rotation.rotY) * z;
-
-                //rotate around Z axis
-                x = cos(obj.rotation.rotZ) * x - sin(obj.rotation.rotZ) * y;
-                y = sin(obj.rotation.rotZ) * x + cos(obj.rotation.rotZ) * y;
-
-                glVertex3f(x, y, z);
-
-
-                //rotate around X axis
-                x = (obj.tris[i].vert3.x + obj.coords.x);
-                y = cos(obj.rotation.rotX) * (obj.tris[i].vert3.y + obj.coords.y) - sin(obj.rotation.rotX) * (obj.tris[i].vert3.z + obj.coords.z);
-                z = sin(obj.rotation.rotX) * (obj.tris[i].vert3.y + obj.coords.y) + cos(obj.rotation.rotX) * (obj.tris[i].vert3.z + obj.coords.z);
-
-                //rotate around Y axis
-                x = cos(obj.rotation.rotY) * x + sin(obj.rotation.rotY) * z;
-                z = -sin(obj.rotation.rotY) * x + cos(obj.rotation.rotY) * z;
-
-                //rotate around Z axis
-                x = cos(obj.rotation.rotZ) * x - sin(obj.rotation.rotZ) * y;
-                y = sin(obj.rotation.rotZ) * x + cos(obj.rotation.rotZ) * y;
-
-                glVertex3f(x, y, z);**/
+                //float vert3[3] = { obj.tris[i].vert3.x + obj.coords.x, obj.tris[i].vert3.y + obj.coords.y, obj.tris[i].vert3.z + obj.coords.z };
+                float vert3[3] = { obj.tris[i].vert3.x, obj.tris[i].vert3.y, obj.tris[i].vert3.z };
+                vert = matmul(rotationX, vert3);
+                vert = matmul(rotationY, vert);
+                vert = matmul(rotationZ, vert);
+                glVertex3f(vert[0] + obj.coords.x, vert[1] + obj.coords.y, vert[2] + obj.coords.z);
 
             }
         }
@@ -210,19 +299,12 @@ void display() {
 
     glEnd();
     glutSwapBuffers();
-    //cameraRot++;
-    //xRot += 0.01;
-    /**Entity object = *(Entity*)objects[1];
-    object.rotation.rotX++;**/
-    //luigi.rotation.rotX += 0.01;
-    //luigi.visible = 0;
-    luigi.rotation.rotY += 0.01;
-    //luigi.rotation.rotZ += 0.01;
+    objects[0].rotation.rotZ += 0.01;
 
     if (keys[115]) { cameraY++; }
     if (keys[119]) { cameraY--; }
-    if (keys[97]) { cameraX--; }
-    if (keys[100]) { cameraX++; }
+    if (keys[97])  { cameraX++; }
+    if (keys[100]) { cameraX--; }
     if (keys[101]) { cameraZ++; }
     if (keys[113]) { cameraZ--; }
     if (keys[105]) { cameraRotY--; }
@@ -267,6 +349,17 @@ void handleKeyDown(unsigned char key, int x, int y) {
 
 void handleKeyUp(unsigned char key, int x, int y) {
     keys[key] = 0;
+}
+
+void sendMessage(int entityID, int senderID, float message) {
+    Message tempMessage;
+    tempMessage.sender = (float)senderID;
+    tempMessage.messageType = message;
+    objects[entityID].messages[objects[entityID].messagePointer++] = tempMessage;
+}
+
+Message popMessage(int entityID) { //vm calling convention will be handleMessage(sender, messageType)
+    return objects[entityID].messages[objects[entityID].messagePointer--];
 }
 
 void spawnObject(char* fileName, float scaleX, float scaleY, float scaleZ, float Xpos, float Ypos, float Zpos) {
@@ -327,11 +420,22 @@ int main(int argc, char** argv)
 
     numObjects = 1;**/
 
-    spawnObject(luigiFileName, 1.0, 1.0, 1.0, 0, 0, 0);
+    spawnObject(luigiFileName, 0.1, 0.1, 0.1, 0, 3.2, 10);
     spawnObject(castleFileName, 5.0, 5.0, 5.0, 0.0, 0.0, 0.0);
-    destroyObject(1);
+    spawnObject(gloomFileName, 5, 5, 5, 0, 0, 0);
 
-    /**Entity obj = *arwing;
+    destroyObject(0);
+
+    //spawnObject(SNESArwingFileName, 1, 1, 1, 0, 0, 0);
+    //spawnObject(arwingFileName, 4, 4, 4, 1, 1, 20);
+    //objects[0] = formCube(0);
+    //numObjects = 1;
+    //spawnObject(luigiFileName, 0.1, 0.1, 0.1, 0, 3.2, 10);
+    //destroyObject(1);
+
+    for (int i = 0; i < numObjects; i++) { printf("Entity %d: %d Triangles/Polys\n", i, objects[i].numTris); }
+
+    /**Entity obj = objects[0];
     for (int i = 0; i < obj.numTris; i++) {
         printf("Triangle %d\n", i);
         printf("   Vertex 1: x=%f y=%f z=%f\n", obj.tris[i].vert1.x, obj.tris[i].vert1.y, obj.tris[i].vert1.z);
@@ -341,7 +445,7 @@ int main(int argc, char** argv)
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(800,600);
     glutInitWindowPosition(50, 50);
     glutCreateWindow("Star Fox 3");
     glutDisplayFunc(display);
